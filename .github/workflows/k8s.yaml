@@ -1,0 +1,26 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  list_pods:
+    permissions:
+      # The "id-token: write" permission is required, or MWI will not be
+      # able to authenticate with the cluster.
+      id-token: write
+      contents: read
+    name: List pods in default namespace
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Fetch kubectl
+        uses: azure/setup-kubectl@v3
+      - name: Fetch Teleport binaries
+        uses: teleport-actions/setup@v1
+        with:
+          version: 18.1.5
+      - name: Export kubectl config
+        run: tbot start --oneshot -c ./action_support/k8s_bot.yaml
+      - name: Run kubectl get pods
+        run: |
+          kubectl --kubeconfig=./k8s_out/config get pods -n default
