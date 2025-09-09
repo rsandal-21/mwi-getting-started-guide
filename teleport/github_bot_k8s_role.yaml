@@ -6,7 +6,7 @@ metadata:
 spec:
   allow:
     kubernetes_labels:
-      env: myenvlabel
+      env: my-env-label # replace with your labels
     kubernetes_groups:
       - system:masters
     kubernetes_resources:

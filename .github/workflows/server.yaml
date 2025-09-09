@@ -2,7 +2,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  run_ssh_command:
+  check_resource_usage:
     permissions:
       # The "id-token: write" permission is required, or MWI will not be
       # able to authenticate with the cluster.
@@ -16,10 +16,11 @@ jobs:
       - name: Fetch Teleport binaries
         uses: teleport-actions/setup@v1
         with:
-          proxy: mycluster.cloud.gravitational.io:443
+          proxy: mycluster.cloud.gravitational.io:443 # replace with your Teleport cluster address
           version: auto
       - name: Export ssh config
         run: tbot start --oneshot -c ./action_support/server_bot.yaml
       - name: Run mpstat
+        # replace target server address with yours
         run: |
           ssh -F ./ssh_out/ssh_config ubuntu@myinstance.mycluster.cloud.gravitational.io mpstat

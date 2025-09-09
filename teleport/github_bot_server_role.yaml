@@ -5,6 +5,6 @@ metadata:
 spec:
   allow:
     node_labels:
-      env: myenvlabel
+      env: my-env-label # replace with your labels
     logins:
       - ubuntu

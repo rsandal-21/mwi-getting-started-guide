@@ -18,7 +18,7 @@ jobs:
       - name: Fetch Teleport binaries
         uses: teleport-actions/setup@v1
         with:
-          proxy: mycluster.cloud.gravitational.io:443
+          proxy: mycluster.cloud.gravitational.io:443 # replace with your Teleport cluster address
           version: auto
       - name: Export kubectl config
         run: tbot start --oneshot -c ./action_support/k8s_bot.yaml
