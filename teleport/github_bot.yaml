@@ -4,4 +4,4 @@ metadata:
   name: github-bot
 spec:
   roles:
-  - github-bot
+    - github-bot
