@@ -4,8 +4,7 @@ metadata:
   name: github-bot
 spec:
   allow:
+    node_labels:
+      env: myenvlabel
     logins:
       - ubuntu
-      - root
-  node_labels:
-    env: myenvlabel

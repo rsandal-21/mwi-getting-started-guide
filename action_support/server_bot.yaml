@@ -1,6 +1,6 @@
 ---
 version: v2
-proxy_server: my.cluster.com:443
+proxy_server: mycluster.cloud.gravitational.io:443
 onboarding:
   join_method: github
   token: github-bot
@@ -8,7 +8,7 @@ certificate_ttl: 5m
 storage:
   type: memory
 outputs:
-- type: identity
-  destination:
-    type: directory
-    path: ./ssh-out
+  - type: identity
+    destination:
+      type: directory
+      path: ./ssh_out

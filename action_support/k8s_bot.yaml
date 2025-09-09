@@ -1,6 +1,6 @@
 ---
 version: v2
-proxy_server: my.cluster.com:443
+proxy_server: mycluster.cloud.gravitational.io:443
 onboarding:
   join_method: github
   token: github-bot
@@ -8,9 +8,10 @@ certificate_ttl: 10m
 storage:
   type: memory
 outputs:
-- type: kubernetes/v2
-  selectors:
-    - env: myenvlabel
-  destination:
-    type: directory
-    path: ./k8s-out
+  - type: kubernetes/v2
+    selectors:
+      - labels:
+          env: myenvlabel
+    destination:
+      type: directory
+      path: ./k8s_out
