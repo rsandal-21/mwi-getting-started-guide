@@ -1,0 +1,7 @@
+kind: bot
+version: v1
+metadata:
+  name: github-bot
+spec:
+  roles:
+  - github-bot

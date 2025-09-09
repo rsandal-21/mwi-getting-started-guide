@@ -1,0 +1,17 @@
+---
+kind: role
+version: v7
+metadata:
+  name: github-bot
+spec:
+  allow:
+    kubernetes_labels:
+      env: myenvlabel
+    kubernetes_groups:
+      - system:masters
+    kubernetes_resources:
+      - kind: '*'
+        name: '*'
+        namespace: default
+        verbs:
+          - '*'

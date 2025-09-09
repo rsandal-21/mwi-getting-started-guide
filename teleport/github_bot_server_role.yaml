@@ -1,0 +1,11 @@
+kind: role
+version: v7
+metadata:
+  name: github-bot
+spec:
+  allow:
+    logins:
+      - ubuntu
+      - root
+  node_labels:
+    env: myenvlabel

@@ -1,0 +1,11 @@
+version: v2
+metadata:
+  name: github-bot
+spec:
+  join_method: github
+  roles:
+    - Bot
+  bot_name: github-bot
+  github:
+    allows:
+      - repository: "your-github-username/mwi-getting-started-guide" # if you cloned the example repo, if not, use your repo name
