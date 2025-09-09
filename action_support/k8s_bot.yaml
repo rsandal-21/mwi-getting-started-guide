@@ -8,9 +8,10 @@ certificate_ttl: 10m
 storage:
   type: memory
 outputs:
-- type: kubernetes/v2
-  selectors:
-    - env: myenvlabel
-  destination:
-    type: directory
-    path: ./k8s-out
+  - type: kubernetes/v2
+    selectors:
+      - labels:
+          env: myenvlabel
+    destination:
+      type: directory
+      path: ./k8s_out

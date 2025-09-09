@@ -8,7 +8,7 @@ certificate_ttl: 5m
 storage:
   type: memory
 outputs:
-- type: identity
-  destination:
-    type: directory
-    path: ./ssh-out
+  - type: identity
+    destination:
+      type: directory
+      path: ./ssh_out

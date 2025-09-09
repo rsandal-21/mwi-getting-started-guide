@@ -3,9 +3,8 @@ version: v7
 metadata:
   name: github-bot
 spec:
-  node_labels:
-    env: myenvlabel
   allow:
+    node_labels:
+      env: myenvlabel
     logins:
       - ubuntu
-      - root
