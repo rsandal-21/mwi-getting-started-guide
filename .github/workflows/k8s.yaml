@@ -13,8 +13,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Fetch kubectl
-        uses: azure/setup-kubectl@v3
       - name: Fetch Teleport binaries
         uses: teleport-actions/setup@v1
         with:
