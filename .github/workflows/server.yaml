@@ -24,4 +24,5 @@ jobs:
           TELEPORT_PROXY: ${{ vars.TELEPORT_PROXY }}
       - name: Run mpstat
         run: |
-          ssh -F ./ssh_out/ssh_config ubuntu@${{ vars.SERVER_ADDRESS }} mpstat
+          PROXY_WITHOUT_PORT=$(echo "${{ vars.TELEPORT_PROXY }}" | sed 's/:[0-9]*$//')
+          ssh -F ./ssh_out/ssh_config ubuntu@${{ vars.SERVER_ADDRESS }}.${PROXY_WITHOUT_PORT} mpstat

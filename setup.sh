@@ -110,8 +110,8 @@ if command -v tsh &> /dev/null; then
 fi
 
 if [ -z "$SERVER_ADDRESS" ]; then
-    prompt_input "Enter your target server address:" \
-        "myinstance.mycluster.teleport.sh" \
+    prompt_input "Enter your target server hostname (short name, not FQDN):" \
+        "aimod" \
         "SERVER_ADDRESS"
 fi
 

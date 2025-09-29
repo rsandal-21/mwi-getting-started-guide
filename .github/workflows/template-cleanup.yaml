@@ -77,13 +77,13 @@ jobs:
           Go to Settings > Secrets and variables > Actions > Variables and add:
           - \`TELEPORT_PROXY\` - Your Teleport proxy address (e.g., \`mycluster.teleport.sh:443\`)
           - \`ENV_LABEL\` - Your environment label (e.g., \`production\`)
-          - \`SERVER_ADDRESS\` - Your target server address (e.g., \`myinstance.mycluster.teleport.sh\`)
+          - \`SERVER_ADDRESS\` - Your target server hostname (e.g., \`aimod\` or \`myinstance\`)
 
           Or use the GitHub CLI:
           \`\`\`bash
           gh variable set TELEPORT_PROXY --body \"mycluster.teleport.sh:443\"
           gh variable set ENV_LABEL --body \"production\"
-          gh variable set SERVER_ADDRESS --body \"myinstance.mycluster.teleport.sh\"
+          gh variable set SERVER_ADDRESS --body \"aimod\"
           \`\`\`
 
           **2. Update Teleport Configuration Files**
