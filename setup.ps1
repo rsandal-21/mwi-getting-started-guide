@@ -45,14 +45,60 @@ Write-Host ""
 
 # Collect configuration values
 Write-ColorOutput "Step 1: Teleport Cluster Configuration" "Green"
-$TELEPORT_PROXY = Get-ValidatedInput `
-    -Prompt "Enter your Teleport proxy address (including port):" `
-    -Example "mycluster.teleport.sh:443"
+
+# Try to detect proxy from tsh status if user is logged in
+$TELEPORT_PROXY = ""
+if (Get-Command tsh -ErrorAction SilentlyContinue) {
+    try {
+        $tshStatus = tsh status --format=json 2>$null | ConvertFrom-Json
+        if ($tshStatus.active -and $tshStatus.active.profile_url) {
+            $DETECTED_PROXY = $tshStatus.active.profile_url -replace '^https?://', ''
+            Write-ColorOutput "`nDetected Teleport proxy from tsh status: $DETECTED_PROXY" "Blue"
+            $useDetected = Read-Host "Use this proxy? (y/n)"
+            if ($useDetected -match '^[Yy]$') {
+                $TELEPORT_PROXY = $DETECTED_PROXY
+            }
+        }
+    } catch {
+        # Silently continue if tsh status fails
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($TELEPORT_PROXY)) {
+    $TELEPORT_PROXY = Get-ValidatedInput `
+        -Prompt "Enter your Teleport proxy address (including port):" `
+        -Example "mycluster.teleport.sh:443"
+}
 
 Write-ColorOutput "`nStep 2: GitHub Repository" "Green"
-$GITHUB_REPO = Get-ValidatedInput `
-    -Prompt "Enter your GitHub repository (format: username/repo-name):" `
-    -Example "myusername/mwi-getting-started-guide"
+
+# Try to detect GitHub repository from git remote
+$GITHUB_REPO = ""
+if ((Get-Command git -ErrorAction SilentlyContinue) -and (Test-Path .git)) {
+    try {
+        $remoteUrl = git remote get-url origin 2>$null
+        if ($remoteUrl) {
+            # Extract owner/repo from various GitHub URL formats
+            # Supports: https://github.com/owner/repo.git, git@github.com:owner/repo.git, etc.
+            if ($remoteUrl -match 'github\.com[:/]([^/]+/[^/]+?)(\.git)?$') {
+                $DETECTED_REPO = $matches[1] -replace '\.git$', ''
+                Write-ColorOutput "`nDetected GitHub repository from git remote: $DETECTED_REPO" "Blue"
+                $useDetected = Read-Host "Use this repository? (y/n)"
+                if ($useDetected -match '^[Yy]$') {
+                    $GITHUB_REPO = $DETECTED_REPO
+                }
+            }
+        }
+    } catch {
+        # Silently continue if git command fails
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($GITHUB_REPO)) {
+    $GITHUB_REPO = Get-ValidatedInput `
+        -Prompt "Enter your GitHub repository (format: username/repo-name):" `
+        -Example "myusername/mwi-getting-started-guide"
+}
 
 Write-ColorOutput "`nStep 3: Environment Label" "Green"
 $ENV_LABEL = Get-ValidatedInput `

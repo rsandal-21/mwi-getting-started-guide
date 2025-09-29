@@ -43,15 +43,54 @@ prompt_input() {
 
 # Collect configuration values
 echo -e "${GREEN}Step 1: Teleport Cluster Configuration${NC}"
-prompt_input "Enter your Teleport proxy address (including port):" \
-    "mycluster.teleport.sh:443" \
-    "TELEPORT_PROXY"
+
+# Try to detect proxy from tsh status if user is logged in
+DETECTED_PROXY=""
+if command -v tsh &> /dev/null; then
+    if tsh status &> /dev/null; then
+        DETECTED_PROXY=$(tsh status --format=json 2>/dev/null | sed -n 's/.*"profile_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1 | sed 's|https://||' | sed 's|http://||')
+        if [ -n "$DETECTED_PROXY" ]; then
+            echo -e "${BLUE}Detected Teleport proxy from tsh status: ${DETECTED_PROXY}${NC}"
+            read -p "Use this proxy? (y/n) " -r REPLY
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                TELEPORT_PROXY="$DETECTED_PROXY"
+            fi
+        fi
+    fi
+fi
+
+if [ -z "$TELEPORT_PROXY" ]; then
+    prompt_input "Enter your Teleport proxy address (including port):" \
+        "mycluster.teleport.sh:443" \
+        "TELEPORT_PROXY"
+fi
 
 echo ""
 echo -e "${GREEN}Step 2: GitHub Repository${NC}"
-prompt_input "Enter your GitHub repository (format: username/repo-name):" \
-    "myusername/mwi-getting-started-guide" \
-    "GITHUB_REPO"
+
+# Try to detect GitHub repository from git remote
+DETECTED_REPO=""
+if command -v git &> /dev/null && [ -d .git ]; then
+    REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
+    if [ -n "$REMOTE_URL" ]; then
+        # Extract owner/repo from various GitHub URL formats
+        # Supports: https://github.com/owner/repo.git, git@github.com:owner/repo.git, etc.
+        DETECTED_REPO=$(echo "$REMOTE_URL" | sed -E 's|.*github\.com[:/]([^/]+/[^/]+)(\.git)?$|\1|' | sed 's|\.git$||')
+        if [ -n "$DETECTED_REPO" ]; then
+            echo -e "${BLUE}Detected GitHub repository from git remote: ${DETECTED_REPO}${NC}"
+            read -p "Use this repository? (y/n) " -r REPLY
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                GITHUB_REPO="$DETECTED_REPO"
+            fi
+        fi
+    fi
+fi
+
+if [ -z "$GITHUB_REPO" ]; then
+    prompt_input "Enter your GitHub repository (format: username/repo-name):" \
+        "myusername/mwi-getting-started-guide" \
+        "GITHUB_REPO"
+fi
 
 echo ""
 echo -e "${GREEN}Step 3: Environment Label${NC}"
