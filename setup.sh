@@ -93,16 +93,75 @@ if [ -z "$GITHUB_REPO" ]; then
 fi
 
 echo ""
-echo -e "${GREEN}Step 3: Environment Label${NC}"
-prompt_input "Enter your environment label:" \
-    "production" \
-    "ENV_LABEL"
+echo -e "${GREEN}Step 3: Target Server${NC}"
+
+# Try to detect a server from tsh ls
+DETECTED_SERVER=""
+if command -v tsh &> /dev/null; then
+    # Get first available server
+    DETECTED_SERVER=$(tsh ls --format=names 2>/dev/null | head -1)
+    if [ -n "$DETECTED_SERVER" ]; then
+        echo -e "${BLUE}Detected server from tsh ls: ${DETECTED_SERVER}${NC}"
+        read -p "Use this server? (y/n) " -r REPLY
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            SERVER_ADDRESS="$DETECTED_SERVER"
+        fi
+    fi
+fi
+
+if [ -z "$SERVER_ADDRESS" ]; then
+    prompt_input "Enter your target server address:" \
+        "myinstance.mycluster.teleport.sh" \
+        "SERVER_ADDRESS"
+fi
 
 echo ""
-echo -e "${GREEN}Step 4: Target Server${NC}"
-prompt_input "Enter your target server address:" \
-    "myinstance.mycluster.teleport.sh" \
-    "SERVER_ADDRESS"
+echo -e "${GREEN}Step 4: Environment Label${NC}"
+
+# Try to detect labels from the selected server
+DETECTED_LABEL=""
+LABEL_LIST=""
+if command -v tsh &> /dev/null && [ -n "$SERVER_ADDRESS" ]; then
+    # Get labels for the specific server
+    # Strategy: Find lines between hostname match and first occurrence of "labels", then extract key-value pairs
+    LABEL_LIST=$(tsh ls --format=json 2>/dev/null | awk -v host="$SERVER_ADDRESS" '
+        $0 ~ "\"hostname\".*\"" host "\"" { found=1 }
+        found && /"labels"/ { in_labels=1; next }
+        in_labels && /}/ { exit }
+        in_labels && /"[^"]*"[[:space:]]*:[[:space:]]*"[^"]*"/ {
+            gsub(/^[[:space:]]*"|"[[:space:]]*:[[:space:]]*"|"[[:space:]]*,?[[:space:]]*$/, " ")
+            gsub(/[[:space:]]+/, " ")
+            sub(/^ /, "")
+            n = split($0, parts, " ")
+            if (n >= 2) print "  " parts[1] ": " parts[2]
+        }
+    ')
+
+    if [ -n "$LABEL_LIST" ]; then
+        echo -e "${BLUE}Available labels on server '${SERVER_ADDRESS}':${NC}"
+        echo "$LABEL_LIST"
+        echo ""
+
+        # Look for common environment labels
+        DETECTED_LABEL=$(echo "$LABEL_LIST" | sed -n 's/^[[:space:]]*\(env\|environment\|stage\):[[:space:]]*\(.*\)/\2/p' | head -1)
+        if [ -n "$DETECTED_LABEL" ]; then
+            echo -e "${BLUE}Suggested environment label: ${DETECTED_LABEL}${NC}"
+            read -p "Use this label? (y/n) " -r REPLY
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                ENV_LABEL="$DETECTED_LABEL"
+            fi
+        else
+            echo -e "${YELLOW}Tip: You can use any label key from above, or create a new one (e.g., 'production', 'dev')${NC}"
+            echo ""
+        fi
+    fi
+fi
+
+if [ -z "$ENV_LABEL" ]; then
+    prompt_input "Enter your environment label:" \
+        "production" \
+        "ENV_LABEL"
+fi
 
 # Display configuration for confirmation
 echo ""
