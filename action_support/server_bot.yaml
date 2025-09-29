@@ -1,6 +1,6 @@
 ---
 version: v2
-proxy_server: mycluster.cloud.gravitational.io:443 # replace with your Teleport cluster address
+proxy_server: ${TELEPORT_PROXY}
 onboarding:
   join_method: github
   token: github-bot

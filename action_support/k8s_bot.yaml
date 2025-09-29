@@ -1,6 +1,6 @@
 ---
 version: v2
-proxy_server: mycluster.cloud.gravitational.io:443 # replace with your Teleport cluster address
+proxy_server: ${TELEPORT_PROXY}
 onboarding:
   join_method: github
   token: github-bot
@@ -11,7 +11,7 @@ outputs:
   - type: kubernetes/v2
     selectors:
       - labels:
-          env: my-env-label # replace with your labels
+          env: ${ENV_LABEL}
     destination:
       type: directory
       path: ./k8s_out

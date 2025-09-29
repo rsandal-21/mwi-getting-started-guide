@@ -1,0 +1,96 @@
+name: Validate Configuration
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Check configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check for placeholder values in Teleport configs
+        run: |
+          echo "Checking Teleport configuration files for placeholders..."
+
+          # Define placeholders to check for in Teleport configs
+          PLACEHOLDERS=(
+            "your-github-username/mwi-getting-started-guide"
+            "my-env-label"
+          )
+
+          FOUND_ISSUES=0
+
+          # Check each placeholder in Teleport directory
+          for placeholder in "${PLACEHOLDERS[@]}"; do
+            echo ""
+            echo "Searching for: $placeholder"
+
+            # Search in teleport files only
+            if grep -r "$placeholder" \
+              --include="*.yaml" \
+              --include="*.yml" \
+              teleport/ 2>/dev/null; then
+
+              echo "❌ Found unconfigured placeholder: $placeholder"
+              FOUND_ISSUES=1
+            else
+              echo "✓ No instances of $placeholder found"
+            fi
+          done
+
+          echo ""
+          echo "================================"
+          if [ $FOUND_ISSUES -eq 1 ]; then
+            echo "❌ Teleport configuration validation FAILED"
+            echo "================================"
+            echo ""
+            echo "Please configure your repository by running:"
+            echo "  ./setup.sh (Linux/macOS)"
+            echo "  ./setup.ps1 (Windows)"
+            echo ""
+            echo "For more information, see the README.md"
+            exit 1
+          else
+            echo "✓ Teleport configuration validation PASSED"
+            echo "================================"
+          fi
+
+      - name: Check for required GitHub variables
+        run: |
+          echo ""
+          echo "Checking for required GitHub variables..."
+
+          REQUIRED_VARS=("TELEPORT_PROXY" "ENV_LABEL" "SERVER_ADDRESS")
+          MISSING_VARS=()
+
+          for var in "${REQUIRED_VARS[@]}"; do
+            if [ -z "${!var}" ]; then
+              MISSING_VARS+=("$var")
+            fi
+          done
+
+          if [ ${#MISSING_VARS[@]} -gt 0 ]; then
+            echo "❌ Missing GitHub variables: ${MISSING_VARS[*]}"
+            echo ""
+            echo "Please set these variables in your repository:"
+            echo "Settings > Secrets and variables > Actions > Variables"
+            echo ""
+            echo "Or use the setup script which can set them automatically:"
+            echo "  ./setup.sh (Linux/macOS)"
+            echo "  ./setup.ps1 (Windows)"
+            exit 1
+          else
+            echo "✓ All required GitHub variables are set"
+          fi
+        env:
+          TELEPORT_PROXY: ${{ vars.TELEPORT_PROXY }}
+          ENV_LABEL: ${{ vars.ENV_LABEL }}
+          SERVER_ADDRESS: ${{ vars.SERVER_ADDRESS }}

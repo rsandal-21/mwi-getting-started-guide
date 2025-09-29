@@ -1,0 +1,130 @@
+name: Template Cleanup
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  setup_reminder:
+    name: Create setup reminder issue
+    runs-on: ubuntu-latest
+    # Only run if the validation workflow would fail (placeholders still exist)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check if setup is needed
+        id: check
+        run: |
+          # Check if placeholders exist in Teleport configs
+          if grep -r "your-github-username\|my-env-label" \
+            --include="*.yaml" --include="*.yml" \
+            teleport/ 2>/dev/null; then
+            echo "needs_setup=true" >> $GITHUB_OUTPUT
+          else
+            echo "needs_setup=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if setup issue already exists
+        if: steps.check.outputs.needs_setup == 'true'
+        id: issue_check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Check if a setup issue already exists
+          ISSUE_COUNT=$(gh issue list --label "setup" --state open --json number --jq 'length')
+          if [ "$ISSUE_COUNT" -gt 0 ]; then
+            echo "issue_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "issue_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create setup reminder issue
+        if: steps.check.outputs.needs_setup == 'true' && steps.issue_check.outputs.issue_exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "⚙️ Complete Repository Setup" \
+            --label "setup" \
+            --body "## Welcome to your Teleport MWI repository!
+
+          This repository has been created from the template and needs to be configured for your environment.
+
+          ### Quick Setup (Recommended)
+
+          Run the setup script to automatically configure all files:
+
+          **Linux/macOS:**
+          \`\`\`bash
+          ./setup.sh
+          \`\`\`
+
+          **Windows (PowerShell):**
+          \`\`\`powershell
+          ./setup.ps1
+          \`\`\`
+
+          ### Manual Setup
+
+          If you prefer to configure manually:
+
+          **1. Set GitHub Repository Variables**
+
+          Go to Settings > Secrets and variables > Actions > Variables and add:
+          - \`TELEPORT_PROXY\` - Your Teleport proxy address (e.g., \`mycluster.teleport.sh:443\`)
+          - \`ENV_LABEL\` - Your environment label (e.g., \`production\`)
+          - \`SERVER_ADDRESS\` - Your target server address (e.g., \`myinstance.mycluster.teleport.sh\`)
+
+          Or use the GitHub CLI:
+          \`\`\`bash
+          gh variable set TELEPORT_PROXY --body \"mycluster.teleport.sh:443\"
+          gh variable set ENV_LABEL --body \"production\"
+          gh variable set SERVER_ADDRESS --body \"myinstance.mycluster.teleport.sh\"
+          \`\`\`
+
+          **2. Update Teleport Configuration Files**
+
+          - [ ] \`teleport/github_bot_join_token.yaml\` - Replace \`your-github-username/mwi-getting-started-guide\`
+          - [ ] \`teleport/github_bot_server_role.yaml\` - Replace \`my-env-label\`
+          - [ ] \`teleport/github_bot_k8s_role.yaml\` - Replace \`my-env-label\`
+
+          ### Next Steps
+
+          After configuration:
+
+          1. **Apply Teleport configuration:**
+             \`\`\`bash
+             tctl create -f teleport/github_bot_join_token.yaml
+             tctl create -f teleport/github_bot.yaml
+             tctl create -f teleport/github_bot_server_role.yaml
+             tctl create -f teleport/github_bot_k8s_role.yaml
+             \`\`\`
+
+          2. **Commit and push your changes**
+
+          3. **Test the workflows** from the Actions tab
+
+          ### Documentation
+
+          For more information, see:
+          - [README.md](README.md)
+          - [Teleport MWI Documentation](https://goteleport.com/docs/machine-workload-identity/machine-id/getting-started/)
+
+          ---
+
+          This issue will automatically close once all placeholders are configured. You can also close it manually when setup is complete."
+
+      - name: Close issue if setup is complete
+        if: steps.check.outputs.needs_setup == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Find and close any open setup issues
+          ISSUE_NUMBERS=$(gh issue list --label "setup" --state open --json number --jq '.[].number')
+          for issue in $ISSUE_NUMBERS; do
+            gh issue close $issue --comment "✅ Repository setup is complete! All placeholders have been configured."
+          done
