@@ -25,4 +25,4 @@ jobs:
       - name: Run fastfetch
         run: |
           PROXY_WITHOUT_PORT=$(echo "teleport.sandal.tech:444" | sed 's/:[0-9]*$//')
-          ssh -F ./ssh_out/ssh_config rhett@${{ vars.SERVER_ADDRESS }}.${PROXY_WITHOUT_PORT} fastfetch
+          ssh -F ./ssh_out/ssh_config rhett@suisei.teleport.sandal.tech fastfetch
