@@ -1,10 +1,10 @@
 ---
 version: v2
-proxy_server: ${TELEPORT_PROXY}
+proxy_server: teleport.sandal.tech:444
 onboarding:
   join_method: github
   token: github-bot
-certificate_ttl: 5m
+certificate_ttl: 10m
 storage:
   type: memory
 outputs:
