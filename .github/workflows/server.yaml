@@ -16,13 +16,13 @@ jobs:
       - name: Fetch Teleport binaries
         uses: teleport-actions/setup@v1
         with:
-          proxy: ${{ vars.TELEPORT_PROXY }}
+          proxy: teleport.sandal.tech:444
           version: auto
       - name: Export ssh config
         run: tbot start --oneshot -c ./action_support/server_bot.yaml
         env:
-          TELEPORT_PROXY: ${{ vars.TELEPORT_PROXY }}
-      - name: Run mpstat
+          TELEPORT_PROXY: teleport.sandal.tech:444
+      - name: Run fastfetch
         run: |
-          PROXY_WITHOUT_PORT=$(echo "${{ vars.TELEPORT_PROXY }}" | sed 's/:[0-9]*$//')
-          ssh -F ./ssh_out/ssh_config ubuntu@${{ vars.SERVER_ADDRESS }}.${PROXY_WITHOUT_PORT} mpstat
+          PROXY_WITHOUT_PORT=$(echo "teleport.sandal.tech:444" | sed 's/:[0-9]*$//')
+          ssh -F ./ssh_out/ssh_config rhett@${{ vars.SERVER_ADDRESS }}.${PROXY_WITHOUT_PORT} fastfetch
